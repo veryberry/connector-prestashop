@@ -20,8 +20,7 @@
 #
 ##############################################################################
 
-from openerp.osv import orm
-from openerp.addons.connector.connector import Environment
+from odoo.addons.connector.connector import ConnectorEnvironment
 from openerp.addons.connector.checkpoint import checkpoint
 
 
@@ -47,4 +46,4 @@ def get_environment(session, model_name, backend_id):
                                   session.uid,
                                   backend_id,
                                   session.context)
-    return Environment(backend_record, session, model_name)
+    return ConnectorEnvironment(backend_record, session, model_name)

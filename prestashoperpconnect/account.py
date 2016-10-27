@@ -5,8 +5,6 @@ from datetime import datetime
 from decimal import Decimal
 
 from openerp import netsvc
-from openerp.osv import fields
-from openerp.osv import orm
 
 from openerp.addons.connector.unit.mapper import mapping
 from openerp.addons.connector.unit.mapper import only_create

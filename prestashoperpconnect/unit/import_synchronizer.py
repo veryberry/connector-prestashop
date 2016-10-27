@@ -28,7 +28,7 @@ from datetime import datetime
 from datetime import timedelta
 from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.unit.synchronizer import ImportSynchronizer
+from openerp.addons.connector.unit.synchronizer import Importer
 from openerp.addons.connector.connector import ConnectorUnit
 from ..backend import prestashop
 from ..connector import get_environment
@@ -46,7 +46,7 @@ from ..connector import add_checkpoint
 _logger = logging.getLogger(__name__)
 
 
-class PrestashopImportSynchronizer(ImportSynchronizer):
+class PrestashopImportSynchronizer(Importer):
     """ Base importer for Prestashop """
 
     def __init__(self, environment):
@@ -163,7 +163,7 @@ class PrestashopImportSynchronizer(ImportSynchronizer):
             )
 
 
-class BatchImportSynchronizer(ImportSynchronizer):
+class BatchImportSynchronizer(Importer):
     """ The role of a BatchImportSynchronizer is to search for a list of
     items to import, then it can either import them directly or delay
     the import of each item separately.

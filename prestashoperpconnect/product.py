@@ -24,13 +24,10 @@ import mimetypes
 import json
 
 from openerp import SUPERUSER_ID
-from openerp.osv import fields, orm
-
-from openerp.addons.product.product import check_ean
 
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.event import on_record_write
-from openerp.addons.connector.unit.synchronizer import ExportSynchronizer
+from openerp.addons.connector.unit.synchronizer import Exporter
 from .unit.import_synchronizer import DelayedBatchImport
 from .unit.import_synchronizer import PrestashopImportSynchronizer
 from .unit.import_synchronizer import import_record
@@ -263,10 +260,10 @@ class ProductMapper(PrestashopImportMapper):
 
     @mapping
     def ean13(self, record):
-        if record['ean13'] in ['', '0']:
+        if record['barcode'] in ['', '0']:
             return {}
-        if check_ean(record['ean13']):
-            return {'ean13': record['ean13']}
+        if record['barcode']:
+            return {'ean13': record['barcode']}
         return {}
 
     @mapping
@@ -315,7 +312,7 @@ class ProductAdapter(GenericAdapter):
 
 
 @prestashop
-class ProductInventoryExport(ExportSynchronizer):
+class ProductInventoryExport(Exporter):
     _model_name = ['prestashop.product.product']
 
     def get_filter(self, product):

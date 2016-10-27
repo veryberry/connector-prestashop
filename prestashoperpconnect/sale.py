@@ -20,11 +20,10 @@
 ###############################################################################
 from prestapyt import PrestaShopWebServiceDict
 
-from openerp.osv import fields, orm
 import openerp.addons.decimal_precision as dp
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.event import on_record_write
-from openerp.addons.connector.unit.synchronizer import (ExportSynchronizer)
+from openerp.addons.connector.unit.synchronizer import (Exporter)
 from .unit.backend_adapter import GenericAdapter
 
 from openerp.addons.connector_ecommerce.unit.sale_order_onchange import (
@@ -99,7 +98,7 @@ class SaleOrderLineAdapter(GenericAdapter):
 
 
 @prestashop
-class SaleStateExport(ExportSynchronizer):
+class SaleStateExport(Exporter):
     _model_name = ['prestashop.sale.order']
 
     def run(self, prestashop_id, state):

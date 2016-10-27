@@ -1,19 +1,16 @@
 # -*- encoding: utf-8 -*-
 
-from openerp.osv import fields
-from openerp.osv import orm
+from odoo import models, fields
 
 
-class account_invoice(orm.Model):
+class account_invoice(models.Model):
     _inherit = 'account.invoice'
 
-    _columns = {
-        'prestashop_bind_ids': fields.one2many(
-            'prestashop.refund',
-            'openerp_id',
-            string="Prestashop Bindings"
-        ),
-    }
+    prestashop_bind_ids = fields.One2many(
+        'prestashop.refund',
+        'openerp_id',
+        string="Prestashop Bindings"
+    )
 
     def action_move_create(self, cr, uid, ids, context=None):
         so_obj = self.pool.get('prestashop.sale.order')
@@ -85,7 +82,7 @@ class account_invoice(orm.Model):
         return ids[0]
 
 
-class prestashop_refund(orm.Model):
+class prestashop_refund(models.Model):
     _name = 'prestashop.refund'
     _inherit = 'prestashop.binding'
     _inherits = {'account.invoice': 'openerp_id'}

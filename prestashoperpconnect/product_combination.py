@@ -10,11 +10,9 @@ We map that in OpenERP to a product.product with an attribute.set defined for
 the main product.
 '''
 
-from unidecode import unidecode
 import json
 
 from openerp import SUPERUSER_ID
-from openerp.osv import fields, orm
 from backend import prestashop
 from .unit.backend_adapter import GenericAdapter
 from .unit.import_synchronizer import PrestashopImportSynchronizer
@@ -25,8 +23,6 @@ from .unit.import_synchronizer import import_record
 from openerp.addons.connector.unit.backend_adapter import BackendAdapter
 from openerp.addons.connector.unit.mapper import mapping
 from openerp.osv.orm import browse_record_list
-
-from openerp.addons.product.product import check_ean
 
 from .product import ProductInventoryExport
 
@@ -304,7 +300,7 @@ class ProductCombinationMapper(PrestashopImportMapper):
     def ean13(self, record):
         if record['ean13'] in ['', '0']:
             return {}
-        if check_ean(record['ean13']):
+        if record['ean13']:
             return {'ean13': record['ean13']}
         return {}
 

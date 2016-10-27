@@ -26,7 +26,7 @@ from datetime import datetime
 from openerp.tools.translate import _
 from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.unit.synchronizer import ExportSynchronizer
+from openerp.addons.connector.unit.synchronizer import Exporter
 from openerp.addons.prestashoperpconnect.unit.mapper import TranslationPrestashopExportMapper
 from openerp.addons.connector.exception import IDMissingInBackend
 from .import_synchronizer import import_record
@@ -51,7 +51,7 @@ In addition to its export job, an exporter has to:
 """
 
 
-class PrestashopBaseExporter(ExportSynchronizer):
+class PrestashopBaseExporter(Exporter):
     """ Base exporter for Prestashop """
 
     def __init__(self, environment):
