@@ -1,29 +1,4 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    Prestashoperpconnect : OpenERP-PrestaShop connector
-#    Copyright 2013 Camptocamp SA
-#    Copyright (C) 2013 Akretion (http://www.akretion.com/)
-#    @author: Guewen Baconnier
-#    @author: Alexis de Lattre <alexis.delattre@akretion.com>
-#    @author Sébastien BEAU <sebastien.beau@akretion.com>
-#    @author Arthur Vuillard
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
-
 import base64
 import logging
 from prestapyt import PrestaShopWebServiceDict
@@ -158,18 +133,6 @@ class GenericAdapter(PrestaShopCRUDAdapter):
 
 
 @prestashop
-class ShopGroupAdapter(GenericAdapter):
-    _model_name = 'prestashop.shop.group'
-    _prestashop_model = 'shop_groups'
-
-
-@prestashop
-class ShopAdapter(GenericAdapter):
-    _model_name = 'prestashop.shop'
-    _prestashop_model = 'shops'
-
-
-@prestashop
 class ResLangAdapter(GenericAdapter):
     _model_name = 'prestashop.res.lang'
     _prestashop_model = 'languages'
@@ -218,37 +181,6 @@ class ProductCategoryAdapter(GenericAdapter):
 
 
 @prestashop
-class ProductImageAdapter(PrestaShopCRUDAdapter):
-    _model_name = 'prestashop.product.image'
-    _prestashop_image_model = 'products'
-
-    def read(self, product_id, image_id, options=None):
-        api = PrestaShopWebServiceImage(self.prestashop.api_url,
-                                        self.prestashop.webservice_key)
-        return api.get_image(
-            self._prestashop_image_model,
-            product_id,
-            image_id,
-            options=options
-        )
-
-@prestashop
-class SupplierImageAdapter(PrestaShopCRUDAdapter):
-    _model_name = 'prestashop.supplier.image'
-    _prestashop_image_model = 'suppliers'
-
-    def read(self, supplier_id, options=None):
-        api = PrestaShopWebServiceImage(self.prestashop.api_url,
-                                        self.prestashop.webservice_key)
-        res = api.get_image(
-            self._prestashop_image_model,
-            supplier_id,
-            options=options
-        )
-        return res['content']
-
-
-@prestashop
 class TaxGroupAdapter(GenericAdapter):
     _model_name = 'prestashop.account.tax.group'
     _prestashop_model = 'tax_rule_groups'
@@ -281,12 +213,6 @@ class SupplierInfoAdapter(GenericAdapter):
 class MailMessageAdapter(GenericAdapter):
     _model_name = 'prestashop.mail.message'
     _prestashop_model = 'messages'
-
-
-@prestashop
-class BundleAdapter(GenericAdapter):
-    _model_name = ['prestashop.mrp.bom', 'prestashop.combination.mrp.bom']
-    _prestashop_model = 'products'
 
 
 @prestashop

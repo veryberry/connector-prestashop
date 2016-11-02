@@ -1,9 +1,9 @@
 # -*- encoding: utf-8 -*-
 
-from odoo import models, fields
+from odoo import api, fields, models
 
 
-class account_invoice(models.Model):
+class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
     prestashop_bind_ids = fields.One2many(
@@ -12,15 +12,15 @@ class account_invoice(models.Model):
         string="Prestashop Bindings"
     )
 
-    def action_move_create(self, cr, uid, ids, context=None):
-        so_obj = self.pool.get('prestashop.sale.order')
+    @api.multi
+    def action_move_create(self):
+        so_obj = self.env.get('prestashop.sale.order')
         line_replacement = {}
-        for invoice in self.browse(cr, uid, ids, context=context):
-            so_ids = so_obj.search(cr, uid, [('name', '=', invoice.origin)])
-            if not so_ids:
+        for invoice in self:
+            sale_orders = so_obj.search([('name', '=', invoice.origin)])
+            if not sale_orders:
                 continue
-            sale_order = so_obj.browse(cr, uid, so_ids[0])
-            discount_product_id = sale_order.backend_id.discount_product_id.id
+            discount_product_id = sale_orders[0].backend_id.discount_product_id.id
 
             for invoice_line in invoice.invoice_line:
                 if invoice_line.product_id.id != discount_product_id:
@@ -30,68 +30,57 @@ class account_invoice(models.Model):
                     partner_id = invoice.partner_id.parent_id.id
                 else:
                     invoice.partner_id.id
-                refund_id = self._find_refund(
-                    cr, uid, -1 * amount, partner_id,
-                    context=context)
-                if refund_id:
-                    self.pool.get('account.invoice.line').unlink(
-                        cr, uid, invoice_line.id)
-                    line_replacement[invoice.id] = refund_id
-                    self.button_reset_taxes(cr, uid, [invoice.id],
-                                            context=context)
+                refund = self._find_refund(-1 * amount, partner_id)
+                if refund:
+                    self.env.get('account.invoice.line').unlink(invoice_line.id)
+                    line_replacement[invoice.id] = refund.id
+                    invoice.button_reset_taxes()
 
-        result = super(account_invoice, self).action_move_create(
-            cr, uid, ids, context=None
-        )
+        result = super(AccountInvoice, self).action_move_create()
         # reconcile invoice with refund
         for invoice_id, refund_id in line_replacement.items():
-            self._reconcile_invoice_refund(
-                cr, uid, invoice_id, refund_id, context=context
-            )
+            self._reconcile_invoice_refund(invoice_id, refund_id)
         return result
 
-    def _reconcile_invoice_refund(self, cr, uid, invoice_id, refund_id,
-                                  context=None):
-        move_line_obj = self.pool.get('account.move.line')
-        invoice_obj = self.pool.get('account.invoice')
+    @api.model
+    def _reconcile_invoice_refund(self, invoice_id, refund_id):
+        move_line_obj = self.env.get('account.move.line')
+        invoice_obj = self.env.get('account.invoice')
 
-        invoice = invoice_obj.browse(cr, uid, invoice_id, context=context)
-        refund = invoice_obj.browse(cr, uid, refund_id, context=context)
+        invoice = invoice_obj.browse(invoice_id)
+        refund = invoice_obj.browse(refund_id)
 
-        move_line_ids = move_line_obj.search(cr, uid, [
+        move_line_ids = move_line_obj.search([
             ('move_id', '=', invoice.move_id.id),
             ('debit', '!=', 0.0),
-        ], context=context)
-        move_line_ids += move_line_obj.search(cr, uid, [
+        ])
+        move_line_ids += move_line_obj.search([
             ('move_id', '=', refund.move_id.id),
             ('credit', '!=', 0.0),
-        ], context=context)
-        move_line_obj.reconcile_partial(
-            cr, uid, move_line_ids, context=context
-        )
+        ])
+        move_line_ids.reconcile_partial()
 
-    def _find_refund(self, cr, uid, amount, partner_id, context=None):
-        ids = self.search(cr, uid, [
+    @api.model
+    def _find_refund(self, amount, partner_id):
+        refunds = self.search([
             ('amount_untaxed', '=', amount),
             ('type', '=', 'out_refund'),
             ('state', '=', 'open'),
             ('partner_id', '=', partner_id),
         ])
-        if not ids:
+        if not refunds:
             return None
-        return ids[0]
+        return refunds[0]
 
 
-class prestashop_refund(models.Model):
+class PrestashopRefund(models.Model):
     _name = 'prestashop.refund'
     _inherit = 'prestashop.binding'
     _inherits = {'account.invoice': 'openerp_id'}
 
-    _columns = {
-        'openerp_id': fields.many2one(
-            'account.invoice',
-            string='Invoice',
-            required=True,
-            ondelete='cascade',
-        ),
-    }
+    openerp_id = fields.Many2one(
+        'account.invoice',
+        string='Invoice',
+        required=True,
+        ondelete='cascade',
+    )

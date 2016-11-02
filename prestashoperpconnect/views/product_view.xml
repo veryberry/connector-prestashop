@@ -33,7 +33,6 @@
                 <form string="prestashop fields" version="7.0">
                     <group col="1">
                         <field name="backend_id"/>
-                        <field name="default_shop_id"/>
                         <field name="link_rewrite"/>
                         <field name="description_short_html"/>
                         <field name="description_html"/>

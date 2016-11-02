@@ -15,7 +15,7 @@ import json
 from openerp import SUPERUSER_ID
 from backend import prestashop
 from .unit.backend_adapter import GenericAdapter
-from .unit.import_synchronizer import PrestashopImportSynchronizer
+from .unit.import_synchronizer import PrestashopImporter
 from .unit.import_synchronizer import TranslatableRecordImport
 from .unit.import_synchronizer import import_batch
 from .unit.mapper import PrestashopImportMapper
@@ -41,7 +41,7 @@ class ProductCombinationAdapter(GenericAdapter):
 
 
 @prestashop
-class ProductCombinationRecordImport(PrestashopImportSynchronizer):
+class ProductCombinationRecordImport(PrestashopImporter):
     _model_name = 'prestashop.product.combination'
 
     def _import_dependencies(self):
@@ -68,7 +68,7 @@ class ProductCombinationRecordImport(PrestashopImportSynchronizer):
             self.check_location(option_value)
 
     def check_location(self, option_value):
-        option_binder = self.get_binder_for_model(
+        option_binder = self.binder_for(
             'prestashop.product.combination.option')
         attribute_id = option_binder.to_openerp(
             option_value['id_attribute_group'], unwrap=True)
@@ -208,7 +208,7 @@ class ProductCombinationMapper(PrestashopImportMapper):
         return self._main_product
 
     def get_main_product_id(self, record):
-        product_binder = self.get_binder_for_model(
+        product_binder = self.binder_for(
             'prestashop.product.product')
         return product_binder.to_openerp(record['id_product'])
 
@@ -227,7 +227,7 @@ class ProductCombinationMapper(PrestashopImportMapper):
 
         for option_value in option_values:
 
-            option_value_binder = self.get_binder_for_model(
+            option_value_binder = self.binder_for(
                 'prestashop.product.combination.option.value')
             option_value_openerp_id = option_value_binder.to_openerp(
                 option_value['id'])
@@ -312,7 +312,7 @@ class ProductCombinationOptionAdapter(GenericAdapter):
 
 
 @prestashop
-class ProductCombinationOptionRecordImport(PrestashopImportSynchronizer):
+class ProductCombinationOptionRecordImport(PrestashopImporter):
     _model_name = 'prestashop.product.combination.option'
 
     def _import_values(self):
@@ -372,7 +372,7 @@ class ProductCombinationOptionMapper(PrestashopImportMapper):
     def name(self, record):
         name = None
         if 'language' in record['name']:
-            language_binder = self.get_binder_for_model('prestashop.res.lang')
+            language_binder = self.binder_for('prestashop.res.lang')
             languages = record['name']['language']
             if not isinstance(languages, list):
                 languages = [languages]
@@ -423,7 +423,7 @@ class ProductCombinationOptionValueMapper(PrestashopImportMapper):
 
     @mapping
     def attribute_id(self, record):
-        binder = self.get_binder_for_model(
+        binder = self.binder_for(
             'prestashop.product.combination.option')
         attribute_id = binder.to_openerp(record['id_attribute_group'],
                                          unwrap=True)

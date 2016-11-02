@@ -20,10 +20,10 @@
 #
 ##############################################################################
 
-from openerp.osv import orm
+from openerp import models
 
 
-class prestashoperpconnect_installed(orm.AbstractModel):
+class PrestashoperpconnectInstalled(models.TransientModel):
     """Empty model used to know if the module is installed in the
     database.
 

@@ -23,6 +23,7 @@
 ###############################################################################
 
 from datetime import datetime
+import openerp
 from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from openerp.addons.connector.connector import Binder
 from ..backend import prestashop
@@ -38,8 +39,8 @@ class PrestashopModelBinder(PrestashopBinder):
     Bindings are done directly on the model
     """
     _model_name = [
-        'prestashop.shop.group',
-        'prestashop.shop',
+        # 'prestashop.shop.group',
+        # 'prestashop.shop',
         'prestashop.res.partner',
         'prestashop.address',
         'prestashop.res.partner.category',
@@ -49,7 +50,6 @@ class PrestashopModelBinder(PrestashopBinder):
         'prestashop.account.tax',
         'prestashop.account.tax.group',
         'prestashop.product.category',
-        'prestashop.product.image',
         'prestashop.product.product',
         'prestashop.product.combination',
         'prestashop.product.combination.option',
@@ -76,70 +76,61 @@ class PrestashopModelBinder(PrestashopBinder):
                  or None if the external_id is not mapped
         :rtype: int
         """
-        openerp_ids = self.environment.model.search(
-            self.session.cr,
-            self.session.uid,
+        bindings = self.model.search(
             [
                 ('prestashop_id', '=', external_id),
                 ('backend_id', '=', self.backend_record.id)
             ],
-            limit=1,
-            context=self.session.context
+            limit=1
         )
-        if not openerp_ids:
+        if not bindings:
             return None
-        openerp_id = openerp_ids[0]
+        bindings.ensure_one()
         if unwrap:
-            return self.session.read(self.environment.model._name,
-                                     openerp_id,
-                                     ['openerp_id'])['openerp_id'][0]
-        else:
-            return openerp_id
+            bindings = getattr(bindings, 'openerp_id')
+        return bindings
 
-    def to_backend(self, local_id, unwrap=False):
+    def to_backend(self, record_id, wrap=False):
         """ Give the external ID for an OpenERP ID
-
-        :param local_id: Local ID for which we want the external id
-                         can be an erp_id or a erp_ps_id
-        :param unwrap: if True, the erp_id is the id of native openerp
-                       object and not a prestashop_xxxx. In this case
-                       we have first to found the prestashop_xxx object id
-                       (erp_ps_id) and then the external id for this record
+        :param record_id: OpenERP ID for which we want the external id
+                          or a recordset with one record
+        :param wrap: if False, record_id is the ID of the binding,
+            if True, record_id is the ID of the normal record, the
+            method will search the corresponding binding and returns
+            the backend id of the binding
         :return: backend identifier of the record
         """
-        if unwrap:
-            erp_ps_id = self.session.search(self.model._name, [
-                ['openerp_id', '=', local_id],
-                ['backend_id', '=', self.backend_record.id]
-            ])
-            if erp_ps_id:
-                erp_ps_id = erp_ps_id[0]
+        record = self.model.browse()
+        if isinstance(record_id, openerp.models.BaseModel):
+            record_id.ensure_one()
+            record = record_id
+            record_id = record_id.id
+        if wrap:
+            binding = self.model.with_context(active_test=False).search(
+                [('openerp_id', '=', record_id),
+                 ('backend_id', '=', self.backend_record.id),
+                 ]
+            )
+            if binding:
+                binding.ensure_one()
+                return binding.prestashop_id
             else:
                 return None
-        else:
-            erp_ps_id = local_id
+        if not record:
+            record = self.model.browse(record_id)
+        assert record
+        return record.prestashop_id
 
-        prestashop_id = self.session.read(
-            self.model._name,
-            erp_ps_id, ['prestashop_id'])['prestashop_id']
-        return prestashop_id
-
-    def bind(self, external_id, openerp_id):
+    def bind(self, external_id, binding_id):
         """ Create the link between an external ID and an OpenERP ID
 
         :param external_id: External ID to bind
-        :param openerp_id: OpenERP ID to bind
-        :type openerp_id: int
+        :param binding_id: OpenERP ID to bind
+        :type binding_id: int
         """
         # avoid to trigger the export when we modify the `prestashop_id`
-        context = dict(self.session.context, connector_no_export=True)
         now_fmt = datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-        self.environment.model.write(
-            self.session.cr,
-            self.session.uid,
-            openerp_id,
-            {'prestashop_id': str(external_id),
-             'sync_date': now_fmt},
-            #{'prestashop_id': external_id},
-            context=context
-        )
+        binding_id.with_context(connector_no_export=True).write({
+            'prestashop_id': str(external_id),
+            'sync_date': now_fmt
+        })

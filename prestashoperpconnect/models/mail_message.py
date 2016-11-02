@@ -1,29 +1,24 @@
-from openerp.osv.orm import Model
-from openerp.osv import fields
+from openerp import api, fields, models
 
 
-class MailMessage(Model):
+class MailMessage(models.Model):
     _inherit = 'mail.message'
 
-    _columns = {
-        'prestashop_bind_ids': fields.one2many(
-            'prestashop.mail.message',
-            'openerp_id',
-            string="Prestashop Bindings"
-        ),
-    }
+    prestashop_bind_ids = fields.One2many(
+        'prestashop.mail.message',
+        'openerp_id',
+        string="Prestashop Bindings"
+    )
 
 
-class PrestashopMailMessage(Model):
+class PrestashopMailMessage(models.Model):
     _name = "prestashop.mail.message"
     _inherit = "prestashop.binding"
     _inherits = {'mail.message': 'openerp_id'}
 
-    _columns = {
-        'openerp_id': fields.many2one(
-            'mail.message',
-            string="Message",
-            required=True,
-            ondelete='cascade'
-        ),
-    }
+    openerp_id = fields.Many2one(
+        'mail.message',
+        string="Message",
+        required=True,
+        ondelete='cascade'
+    )

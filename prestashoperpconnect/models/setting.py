@@ -19,15 +19,13 @@
 #
 ##############################################################################
 
-from openerp.osv import orm, fields
+from openerp import fields, models
 
 
-class prestashop_config_settings(orm.TransientModel):
+class PrestashopConfigSettings(models.TransientModel):
     _inherit = 'connector.config.settings'
 
-    _columns = {
-        'module_prestashoperpconnect_other_module': fields.boolean(
-            "Example setting checkbox (experimental)",
-            help="This installs the module prestashoperpconnect_... "
-                 "(no real action now)"),
-    }
+    module_prestashoperpconnect_other_module = fields.Boolean(
+        "Example setting checkbox (experimental)",
+        help="This installs the module prestashoperpconnect_... "
+             "(no real action now)")

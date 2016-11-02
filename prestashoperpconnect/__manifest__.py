@@ -29,15 +29,9 @@
     "license": "AGPL-3",
     "depends": [
         "product",
-        "product_m2mcategories",
+        "product_multi_category",
         "connector_ecommerce",
-        "product_images",
-        "product_custom_attributes",
-        "mrp",
     ],
-    "external_dependencies": {
-        'python': ["unidecode"],
-    },
     "author": "PrestashopERPconnect Core Editors,Odoo Community Association (OCA)",
     "description": """This module connects OpenERP and Prestashop.
 
@@ -53,7 +47,7 @@ This module allows the synchronisation of the following objects between OpenERP 
 
 Once these objects are synchronised, it will allow the import of orders, together with the related customers and addresses.
 
-This connector supports Prestashop 1.5 and uses the webservices of Prestashop ; it doesn't require any plug-in in Prestashop.
+This connector supports Prestashop 1.6 and uses the webservices of Prestashop ; it doesn't require any plug-in in Prestashop.
 
 This connector was started by Akretion (http://www.akretion.com/) and Camptocamp (http://www.camptocamp.com/) during a code sprint that took place in Seythenex (Haute-Savoie, France) on 6-10 February 2012. Publishing this connector as free software was possible thanks to a large R&D effort of Akretion and Camptocamp (with some help of Julius Network Solutions). Akretion and Camptocamp form the "PrestashopERPconnect Core Editors".
 
@@ -69,17 +63,17 @@ This connector is built on a very solid basis, but still requires deep knowledge
         'data/cron.xml',
         'data/product_decimal_precision.xml',
 
-        'prestashop_model_view.xml',
-        'product_view.xml',
-        'delivery_view.xml',
-        'prestashoperpconnect_menu.xml',
-        'partner_view.xml',
-        'sale_view.xml',
-        'setting_view.xml',
+        'views/prestashop_model_view.xml',
+        'views/product_view.xml',
+        'views/delivery_view.xml',
+        'views/prestashoperpconnect_menu.xml',
+        'views/partner_view.xml',
+        'views/sale_view.xml',
+        'views/setting_view.xml',
 
         'security/ir.model.access.csv',
         'security/prestashop_security.xml',
-        'ecommerce_data.xml',
+        'data/ecommerce_data.xml',
     ],
     "active": False,
     "installable": True,

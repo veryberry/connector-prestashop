@@ -12,7 +12,7 @@
     <field name="name">prestashop.backend.form</field>
     <field name="model">prestashop.backend</field>
     <field name="arch" type="xml">
-        <form string="PrestaShop Backend" version="7.0">
+        <form string="PrestaShop Backend">
             <header>
                 <button name="synchronize_metadata"
                         type="object"
@@ -27,7 +27,7 @@
             </header>
             <sheet>
                 <h1>
-                    <field name="name" class="oe_inline"/>
+                    <field name="name" class="oe_inline" placeholder="Name"/>
                 </h1>
                 <group>
                     <field name="company_id" />
@@ -190,7 +190,7 @@
     <field name="view_type">form</field>
     <field name="view_mode">tree,form</field>
 </record>
-
+<!-- 
 
 <record id="view_prestashop_shop_group_form" model="ir.ui.view">
     <field name="name">prestashop.shop.group.form</field>
@@ -223,10 +223,10 @@
     <field name="res_model">prestashop.shop.group</field>
     <field name="view_type">form</field>
     <field name="view_mode">tree,form</field>
-</record>
+</record> -->
 
 
-<record id="view_prestashop_shop_form" model="ir.ui.view">
+<!-- <record id="view_prestashop_shop_form" model="ir.ui.view">
     <field name="name">prestashop.shop.form</field>
     <field name="model">prestashop.shop</field>
     <field name="arch" type="xml">
@@ -245,8 +245,8 @@
         </form>
     </field>
 </record>
-
-<record id="view_prestashop_shop_tree" model="ir.ui.view">
+ -->
+<!-- <record id="view_prestashop_shop_tree" model="ir.ui.view">
     <field name="name">prestashop.shop.tree</field>
     <field name="model">prestashop.shop</field>
     <field name="arch" type="xml">
@@ -264,7 +264,7 @@
     <field name="view_type">form</field>
     <field name="view_mode">tree,form</field>
 </record>
-
+ -->
 
 </data>
 </openerp>

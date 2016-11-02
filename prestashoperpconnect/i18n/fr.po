@@ -958,7 +958,6 @@ msgstr "État de commande"
 #: field:res.partner,prestashop_bind_ids:0
 #: field:res.partner.category,prestashop_bind_ids:0
 #: field:sale.order.line,prestashop_bind_ids:0
-#: field:sale.shop,prestashop_bind_ids:0
 msgid "PrestaShop Bindings"
 msgstr "Liaisons PrestaShop"
 

@@ -29,7 +29,7 @@ from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.event import on_record_write
 from openerp.addons.connector.unit.synchronizer import Exporter
 from .unit.import_synchronizer import DelayedBatchImport
-from .unit.import_synchronizer import PrestashopImportSynchronizer
+from .unit.import_synchronizer import PrestashopImporter
 from .unit.import_synchronizer import import_record
 from openerp.addons.connector.unit.mapper import mapping
 
@@ -55,13 +55,11 @@ class ProductCategoryMapper(PrestashopImportMapper):
     _model_name = 'prestashop.product.category'
 
     direct = [
-        ('position', 'sequence'),
         ('description', 'description'),
         ('link_rewrite', 'link_rewrite'),
         ('meta_description', 'meta_description'),
         ('meta_keywords', 'meta_keywords'),
         ('meta_title', 'meta_title'),
-        ('id_shop_default', 'default_shop_id'),
     ]
 
     @mapping
@@ -96,35 +94,6 @@ class ProductCategoryMapper(PrestashopImportMapper):
         return {'date_upd': record['date_upd']}
 
 
-# Product image connector parts
-@prestashop
-class ProductImageMapper(PrestashopImportMapper):
-    _model_name = 'prestashop.product.image'
-
-    direct = [
-        ('content', 'file'),
-    ]
-
-    @mapping
-    def product_id(self, record):
-        return {'product_id': self.get_openerp_id(
-            'prestashop.product.product',
-            record['id_product']
-        )}
-
-    @mapping
-    def name(self, record):
-        return {'name': record['id_product']+'_'+record['id_image']}
-
-    @mapping
-    def backend_id(self, record):
-        return {'backend_id': self.backend_record.id}
-
-    @mapping
-    def extension(self, record):
-        return {"extension": mimetypes.guess_extension(record['type'])}
-
-
 ########  product  ########
 @prestashop
 class ProductMapper(PrestashopImportMapper):
@@ -136,7 +105,6 @@ class ProductMapper(PrestashopImportMapper):
         ('weight', 'weight'),
         ('wholesale_price', 'standard_price'),
         ('price', 'list_price'),
-        ('id_shop_default', 'default_shop_id'),
         ('link_rewrite', 'link_rewrite'),
         ('reference', 'reference'),
     ]
@@ -171,8 +139,8 @@ class ProductMapper(PrestashopImportMapper):
         return {}
 
     def _product_code_exists(self, code):
-        model = self.session.pool.get('product.product')
-        product_ids = model.search(self.session.cr, SUPERUSER_ID, [
+        model = self.session.env.get('product.product')
+        product_ids = model.search([
             ('default_code', '=', code),
             ('company_id', '=', self.backend_record.company_id.id),
         ])
@@ -259,29 +227,25 @@ class ProductMapper(PrestashopImportMapper):
         return {'company_id': self.backend_record.company_id.id}
 
     @mapping
-    def ean13(self, record):
-        if record['barcode'] in ['', '0']:
+    def barcode(self, record):
+        if record['ean13'] in ['', '0']:
             return {}
-        if record['barcode']:
-            return {'ean13': record['barcode']}
+        if record['ean13']:
+            return {'barcode': record['ean13']}
         return {}
 
     @mapping
     def taxes_id(self, record):
         if record['id_tax_rules_group'] == '0':
             return {}
-        tax_group_id = self.get_openerp_id(
-            'prestashop.account.tax.group',
-            record['id_tax_rules_group']
-        )
-        tax_group_model = self.session.pool.get('account.tax.group')
-        tax_ids = tax_group_model.read(
-            self.session.cr,
-            self.session.uid,
-            tax_group_id,
-            ['tax_ids']
-        )
-        return {"taxes_id": [(6, 0, tax_ids['tax_ids'])]}
+        binder = self.binder_for('prestashop.account.tax.group')
+        tax_group = binder.to_openerp(record['id_tax_rules_group'], True)
+        if not tax_group:
+            return {}
+        taxes = self.session.env['account.tax'].search([
+            ('tax_group_id','=',tax_group.id)
+        ])
+        return {"taxes_id": [(6, 0, [t.id for t in taxes])]}
 
     @mapping
     def type(self, record):
@@ -316,7 +280,7 @@ class ProductInventoryExport(Exporter):
     _model_name = ['prestashop.product.product']
 
     def get_filter(self, product):
-        binder = self.get_binder_for_model()
+        binder = self.binder_for()
         prestashop_id = binder.to_backend(product.id)
         return {
             'filter[id_product]': prestashop_id,
@@ -325,10 +289,8 @@ class ProductInventoryExport(Exporter):
 
     def run(self, binding_id, fields):
         """ Export the product inventory to Prestashop """
-        product = self.session.browse(self.model._name, binding_id)
-        adapter = self.get_connector_unit_for_model(
-            GenericAdapter, '_import_stock_available'
-        )
+        product = self.model.browse(binding_id)
+        adapter = self.unit_for(GenericAdapter, '_import_stock_available')
         filter = self.get_filter(product)
         adapter.export_quantity(filter, int(product.quantity))
 
@@ -361,7 +323,7 @@ class ProductInventoryBatchImport(DelayedBatchImport):
 
 
 @prestashop
-class ProductInventoryImport(PrestashopImportSynchronizer):
+class ProductInventoryImport(PrestashopImporter):
     _model_name = ['_import_stock_available']
 
     def _get_quantity(self, record):
@@ -381,9 +343,9 @@ class ProductInventoryImport(PrestashopImportSynchronizer):
 
     def _get_product(self, record):
         if record['id_product_attribute'] == '0':
-            binder = self.get_binder_for_model('prestashop.product.product')
+            binder = self.binder_for('prestashop.product.product')
             return binder.to_openerp(record['id_product'], unwrap=True)
-        binder = self.get_binder_for_model('prestashop.product.combination')
+        binder = self.binder_for('prestashop.product.combination')
         return binder.to_openerp(record['id_product_attribute'], unwrap=True)
 
     def run(self, record):
@@ -483,7 +445,7 @@ def prestashop_product_stock_updated(session, model_name, record_id,
 @job
 def export_inventory(session, model_name, record_id, fields=None):
     """ Export the inventory configuration and quantity of a product. """
-    product = session.browse(model_name, record_id)
+    product = session.env[model_name].browse(record_id)
     backend_id = product.backend_id.id
     env = get_environment(session, model_name, backend_id)
     inventory_exporter = env.get_connector_unit(ProductInventoryExport)

@@ -10,144 +10,53 @@ We map that in OpenERP to a product.product with an attribute.set defined for
 the main product.
 '''
 
-from openerp.osv import fields, orm
+from openerp import api, fields, models
 
 from openerp.addons.connector.session import ConnectorSession
 
 from ..unit.import_synchronizer import import_record
 
 
-class product_product(orm.Model):
+class ProductProduct(models.Model):
     _inherit = 'product.product'
 
-    _columns = {
-        'prestashop_combinations_bind_ids': fields.one2many(
-            'prestashop.product.combination',
-            'openerp_id',
-            string='PrestaShop Bindings (combinations)'
-        ),
-    }
+    prestashop_combinations_bind_ids = fields.One2many(
+        'prestashop.product.combination',
+        'openerp_id',
+        string='PrestaShop Bindings (combinations)'
+    )
 
 
-class prestashop_product_combination(orm.Model):
+class PrestashopProductCombination(models.Model):
     _name = 'prestashop.product.combination'
     _inherit = 'prestashop.binding'
     _inherits = {'product.product': 'openerp_id'}
 
-    _columns = {
-        'openerp_id': fields.many2one(
-            'product.product',
-            string='Product',
-            required=True,
-            ondelete='cascade'
-        ),
-        'main_product_id': fields.many2one(
-            'prestashop.product.product',
-            string='Main product',
-            required=True,
-            ondelete='cascade'
-        ),
-        'quantity': fields.float(
-            'Computed Quantity',
-            help="Last computed quantity to send on Prestashop."
-        ),
-        'reference': fields.char('Original reference'),
-        'prestashop_bundle_id': fields.many2one(
-            'prestashop.combination.mrp.bom',
-            'Prestashop bundle',
-        ),
-    }
+    openerp_id = fields.Many2one(
+        'product.product',
+        string='Product',
+        required=True,
+        ondelete='cascade'
+    )
+    main_product_id = fields.Many2one(
+        'prestashop.product.product',
+        string='Main product',
+        required=True,
+        ondelete='cascade'
+    )
+    quantity = fields.Float(
+        'Computed Quantity',
+        help="Last computed quantity to send on Prestashop."
+    )
+    reference = fields.Char('Original reference')
 
-    def recompute_prestashop_qty(self, cr, uid, ids, context=None):
-        if not hasattr(ids, '__iter__'):
-            ids = [ids]
-
-        for product in self.browse(cr, uid, ids, context=context):
-            new_qty = self._prestashop_qty(cr, uid, product, context=context)
-            self.write(
-                cr, uid, product.id, {'quantity': new_qty}, context=context
-            )
+    @api.model
+    def recompute_prestashop_qty(self):
+        for product in self:
+            new_qty = self._prestashop_qty(product)
+            product.write({quantity: new_qty})
         return True
 
-    def _prestashop_qty(self, cr, uid, product, context=None):
+    @api.model
+    def _prestashop_qty(self, product):
         return product.qty_available
-
-
-class attribute_attribute(orm.Model):
-    _inherit = 'attribute.attribute'
-
-    _columns = {
-        'prestashop_bind_ids': fields.one2many(
-            'prestashop.product.combination.option',
-            'openerp_id',
-            string='PrestaShop Bindings (combinations)'
-        ),
-    }
-
-
-class prestashop_product_combination_option(orm.Model):
-    _name = 'prestashop.product.combination.option'
-    _inherit = 'prestashop.binding'
-    _inherits = {'attribute.attribute': 'openerp_id'}
-
-    _columns = {
-        'openerp_id': fields.many2one(
-            'attribute.attribute',
-            string='Attribute',
-            required=True,
-            ondelete='cascade'
-        ),
-    }
-
-
-class attribute_option(orm.Model):
-    _inherit = 'attribute.option'
-
-    _columns = {
-        'prestashop_bind_ids': fields.one2many(
-            'prestashop.product.combination.option.value',
-            'openerp_id',
-            string='PrestaShop Bindings'
-        ),
-    }
-
-
-class prestashop_product_combination_option_value(orm.Model):
-    _name = 'prestashop.product.combination.option.value'
-    _inherit = 'prestashop.binding'
-    _inherits = {'attribute.option': 'openerp_id'}
-
-    _columns = {
-        'openerp_id': fields.many2one(
-            'attribute.option',
-            string='Attribute',
-            required=True,
-            ondelete='cascade'
-        ),
-    }
-
-
-class mrp_bom(orm.Model):
-    _inherit = 'mrp.bom'
-
-    _columns = {
-        'prestashop_combintaion_bind_ids': fields.one2many(
-            'prestashop.combination_mrp.bom',
-            'openerp_id',
-            string='PrestaShop Bindings'
-        ),
-    }
-
-class prestashop_combination_mrp_bom(orm.Model):
-    _name = 'prestashop.combination.mrp.bom'
-    _inherit = 'prestashop.binding'
-    _inherits = {'mrp.bom': 'openerp_id'}
-
-    _columns = {
-        'openerp_id': fields.many2one(
-            'mrp.bom',
-            string='Openerp BOM',
-            required=True,
-            ondelete='cascade'
-        ),
-    }

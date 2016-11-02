@@ -41,9 +41,6 @@ def add_checkpoint(session, model_name, record_id, backend_id):
                                      'prestashop.backend', backend_id)
 
 def get_environment(session, model_name, backend_id):
-    model = session.pool.get('prestashop.backend')
-    backend_record = model.browse(session.cr,
-                                  session.uid,
-                                  backend_id,
-                                  session.context)
+    model = session.env.get('prestashop.backend')
+    backend_record = model.browse(backend_id)
     return ConnectorEnvironment(backend_record, session, model_name)
