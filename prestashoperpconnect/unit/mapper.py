@@ -247,7 +247,7 @@ class AddressImportMapper(PrestashopImportMapper):
         if record.get('id_country'):
             binder = self.binder_for('prestashop.res.country')
             erp_country_id = binder.to_openerp(record['id_country'], unwrap=True)
-            return {'country_id': erp_country_id}
+            return {'country_id': erp_country_id.id}
         return {}
 
     @mapping

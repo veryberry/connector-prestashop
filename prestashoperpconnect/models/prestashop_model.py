@@ -151,7 +151,7 @@ class PrestashopBackend(models.Model):
             import_customers_since.delay(
                 session,
                 backend_record.id,
-                since_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+                since_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT) if since_date else None,
                 priority=10,
             )
 
