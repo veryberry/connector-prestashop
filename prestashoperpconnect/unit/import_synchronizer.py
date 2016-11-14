@@ -444,15 +444,15 @@ class SaleImportRule(ConnectorUnit):
             raise FailedJobError(
                 "The configuration is missing for the Payment Method '%s'.\n\n"
                 "Resolution:\n"
-                "- Go to 'Sales > Configuration > Sales > Customer Payment "
+                "- Go to 'Accounting > Configuration > Management > Payment Methods "
                 "Method'\n"
                 "- Create a new Payment Method with name '%s'\n"
                 "-Eventually  link the Payment Method to an existing Workflow "
                 "Process or create a new one." % (payment_method,
                                                   payment_method))
 
-        self._rule_global(record, methods[0])
-        self._rules[method.import_rule](self, record, methods[0])
+        # self._rule_global(record, methods[0])
+        # self._rules[methods[0].import_rule](self, record, methods[0])
 
     def _rule_global(self, record, method):
         """ Rule always executed, whichever is the selected rule """

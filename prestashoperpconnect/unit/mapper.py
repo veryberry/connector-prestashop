@@ -324,7 +324,7 @@ class SaleOrderMapper(PrestashopImportMapper):
         return discount_mappers
 
     def _sale_order_exists(self, name):
-        ids = self.session.search('sale.order', [
+        ids = self.session.env['sale.order'].search([
             ('name', '=', name),
             ('company_id', '=', self.backend_record.company_id.id),
         ])
@@ -398,7 +398,7 @@ class SaleOrderMapper(PrestashopImportMapper):
         method_ids = self.session.env['account.payment.method'].search(
             [
                 ('name', '=', record['payment']),
-                ('company_id', '=', self.backend_record.company_id.id),
+                # ('company_id', '=', self.backend_record.company_id.id),
             ]
         )
         assert method_ids, ("Payment method '%s' has not been found ; "
