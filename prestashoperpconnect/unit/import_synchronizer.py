@@ -212,7 +212,7 @@ class AddCheckpoint(ConnectorUnit):
 
 @prestashop
 class PaymentMethodsImportSynchronizer(BatchImportSynchronizer):
-    _model_name = 'payment.method'
+    _model_name = 'account.payment.method'
 
     def run(self, filters=None, **kwargs):
         if filters is None:
@@ -223,13 +223,13 @@ class PaymentMethodsImportSynchronizer(BatchImportSynchronizer):
         )
 
     def _import_record(self, record):
-        ids = self.session.search('payment.method', [
+        ids = self.session.env['account.payment.method']([
             ('name', '=', record['payment']),
             ('company_id', '=', self.backend_record.company_id.id),
         ])
         if ids:
             return
-        self.session.create('payment.method', {
+        self.session.env['account.payment.method'].create({
             'name': record['payment'],
             'company_id': self.backend_record.company_id.id,
         })
@@ -243,8 +243,6 @@ class DirectBatchImport(BatchImportSynchronizer):
     performed from the UI.
     """
     _model_name = [
-        # 'prestashop.shop.group',
-        # 'prestashop.shop',
         'prestashop.account.tax.group',
         'prestashop.sale.order.state',
     ]
@@ -439,9 +437,10 @@ class SaleImportRule(ConnectorUnit):
         """
         session = self.session
         payment_method = record['payment']
-        method_ids = session.search('payment.method',
-                                    [('name', '=', payment_method)])
-        if not method_ids:
+        methods = session.env['account.payment.method'].search([
+            ('name', '=', payment_method)
+        ])
+        if not methods:
             raise FailedJobError(
                 "The configuration is missing for the Payment Method '%s'.\n\n"
                 "Resolution:\n"
@@ -451,10 +450,9 @@ class SaleImportRule(ConnectorUnit):
                 "-Eventually  link the Payment Method to an existing Workflow "
                 "Process or create a new one." % (payment_method,
                                                   payment_method))
-        method = session.browse('payment.method', method_ids[0])
 
-        self._rule_global(record, method)
-        self._rules[method.import_rule](self, record, method)
+        self._rule_global(record, methods[0])
+        self._rules[method.import_rule](self, record, methods[0])
 
     def _rule_global(self, record, method):
         """ Rule always executed, whichever is the selected rule """
@@ -929,13 +927,9 @@ def import_orders_since(session, backend_id, since_date=None):
         pass
 
     now_fmt = datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-    session.pool.get('prestashop.backend').write(
-        session.cr,
-        session.uid,
-        backend_id,
-        {'import_orders_since': now_fmt},
-        context=session.context
-    )
+    session.env.get('prestashop.backend').browse(backend_id).write({
+        'import_orders_since': now_fmt
+    })
 
 
 @job

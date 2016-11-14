@@ -53,22 +53,6 @@ class SaleOrderAdapter(GenericAdapter):
         api = self.connect()
         return api.add('order_histories', datas)
 
-    def search(self, filters=None):
-        result = super(SaleOrderAdapter, self).search(filters=filters)
-
-        shop_ids = self.session.search('prestashop.shop', [
-            ('backend_id', '=', self.backend_record.id)
-        ])
-        shops = self.session.browse('prestashop.shop', shop_ids)
-        for shop in shops:
-            if not shop.default_url:
-                continue
-
-            api = PrestaShopWebServiceDict(
-                '%s/api' % shop.default_url, self.prestashop.webservice_key
-            )
-            result += api.search(self._prestashop_model, filters)
-        return result
 
 @prestashop
 class OrderCarriers(GenericAdapter):
@@ -79,7 +63,7 @@ class OrderCarriers(GenericAdapter):
 
 @prestashop
 class PaymentMethodAdapter(GenericAdapter):
-    _model_name = 'payment.method'
+    _model_name = 'account.payment.method'
     _prestashop_model = 'orders'
     _export_node_name = 'order'
     

@@ -192,26 +192,14 @@ class AddressImportMapper(PrestashopImportMapper):
 
     @mapping
     def parent_id(self, record):
-        parent_id = self.get_openerp_id(
-            'prestashop.res.partner',
-            record['id_customer']
-        )
+        binder = self.binder_for('prestashop.res.partner')
+        parent = binder.to_openerp(record['id_customer'], unwrap=True)
         if record['vat_number']:
             vat_number = record['vat_number'].replace('.', '').replace(' ', '')
-            if self._check_vat(vat_number):
-                self.session.write(
-                    'res.partner',
-                    [parent_id],
-                    {'vat': vat_number}
-                )
-            else:
-                add_checkpoint(
-                    self.session,
-                    'res.partner',
-                    parent_id,
-                    self.backend_record.id
-                )
-        return {'parent_id': parent_id}
+            parent.write(
+                {'vat': vat_number}
+            )
+        return {'parent_id': parent.id}
 
     def _check_vat(self, vat):
         vat_country, vat_number = vat[:2].lower(), vat[2:]
@@ -407,8 +395,7 @@ class SaleOrderMapper(PrestashopImportMapper):
 
     @mapping
     def payment(self, record):
-        method_ids = self.session.search(
-            'payment.method',
+        method_ids = self.session.env['account.payment.method'].search(
             [
                 ('name', '=', record['payment']),
                 ('company_id', '=', self.backend_record.company_id.id),

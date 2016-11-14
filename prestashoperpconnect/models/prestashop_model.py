@@ -201,7 +201,7 @@ class PrestashopBackend(models.Model):
     def import_payment_methods(self):
         session = ConnectorSession.from_env(self.env)
         for backend_record in self:
-            import_batch.delay(session, 'payment.method', backend_record.id)
+            import_batch.delay(session, 'account.payment.method', backend_record.id)
         return True
 
     @api.multi
