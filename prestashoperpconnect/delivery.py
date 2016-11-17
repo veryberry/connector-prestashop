@@ -69,10 +69,8 @@ class CarrierImportMapper(PrestashopImportMapper):
     def product_id(self, record):
         if self.backend_record.shipping_product_id:
             return {'product_id': self.backend_record.shipping_product_id.id}
-        prod_mod = self.session.pool['product.product']
+        prod_mod = self.session.env['product.product']
         default_ship_product = prod_mod.search(
-            self.session.cr,
-            self.session.uid,
             [('default_code', '=', 'SHIP'),
              ('company_id', '=', self.backend_record.company_id.id)],
         )
