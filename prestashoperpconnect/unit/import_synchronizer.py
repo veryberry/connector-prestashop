@@ -231,6 +231,7 @@ class PaymentMethodsImportSynchronizer(BatchImportSynchronizer):
             return
         self.session.env['account.payment.method'].create({
             'name': record['payment'],
+            'code': record['payment'],
             # 'company_id': self.backend_record.company_id.id,
         })
 
