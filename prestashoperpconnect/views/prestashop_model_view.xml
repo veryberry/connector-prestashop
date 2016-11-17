@@ -14,11 +14,6 @@
     <field name="arch" type="xml">
         <form string="PrestaShop Backend">
             <header>
-                <button name="synchronize_metadata"
-                        type="object"
-                        class="oe_highlight"
-                        help="Synchonize shop and shop groups"
-                        string="Synchronize Metadata"/>
                 <button name="synchronize_basedata"
                         type="object"
                         class="oe_highlight"

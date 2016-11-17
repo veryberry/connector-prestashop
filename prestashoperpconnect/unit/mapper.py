@@ -271,7 +271,7 @@ class SaleOrderMapper(PrestashopImportMapper):
     ]
 
     def _get_sale_order_lines(self, record):
-        orders = record['associations'].get('order_rows', {}).get('order_row', [])
+        orders = record['associations'].get('order_rows', {}).get('order_rows', [])
         if isinstance(orders, dict):
             return [orders]
         return orders
@@ -304,31 +304,33 @@ class SaleOrderMapper(PrestashopImportMapper):
             )
             children.extend(items)
 
-        discount_lines = self._get_discounts_lines(source)
-        children.extend(discount_lines)
+        # discount_lines = self._get_discounts_lines(source)
+        # children.extend(discount_lines)
         return children
 
-    def _get_discounts_lines(self, record):
-        if record['total_discounts'] == '0.00':
-            return []
-        adapter = self.unit_for(
-            GenericAdapter, 'prestashop.sale.order.line.discount')
-        discount_ids = adapter.search({'filter[id_order]': record['id']})
-        discount_mappers = []
-        for discount_id in discount_ids:
-            discount = adapter.read(discount_id)
-            mapper = self._init_child_mapper(
-                'prestashop.sale.order.line.discount')
-            mapper.convert_child(discount, parent_values=record)
-            discount_mappers.append(mapper)
-        return discount_mappers
+    # def _get_discounts_lines(self, record):
+    #     return []
+    #     if record['total_discounts'] == '0.00':
+    #         return []
+    #     adapter = self.unit_for(
+    #         GenericAdapter, 'prestashop.sale.order.line.discount')
+    #     discount_ids = adapter.search({'filter[id_order]': record['id']})
+    #     discount_mappers = []
+    #     for discount_id in discount_ids:
+    #         discount = adapter.read(discount_id)
+    #         mapper = self._get_map_child_unit(
+    #             'prestashop.sale.order.line.discount')
+    #         map_record = mapper.map_record(record)
+    #         output_values = map_record.values()
+    #         discount_mappers.append(output_values)
+    #     return discount_mappers
 
     def _sale_order_exists(self, name):
         ids = self.session.env['sale.order'].search([
             ('name', '=', name),
             ('company_id', '=', self.backend_record.company_id.id),
         ])
-        return len(ids) == 1
+        return len(ids) == 1 
 
     @mapping
     def name(self, record):

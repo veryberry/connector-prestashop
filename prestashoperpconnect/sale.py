@@ -102,7 +102,6 @@ class SaleStateExport(Exporter):
 def prestashop_sale_state_modified(session, model_name, record_id,
                                    fields=None):
     if 'state' in fields:
-        print record_id
         sale = session.env[model_name].browse(record_id)
         # a quick test to see if it is worth trying to export sale state
         states = session.env['sale.order.state.list'].search(

@@ -234,18 +234,18 @@ class ProductMapper(PrestashopImportMapper):
             return {'barcode': record['ean13']}
         return {}
 
-    @mapping
-    def taxes_id(self, record):
-        if record['id_tax_rules_group'] == '0':
-            return {}
-        binder = self.binder_for('prestashop.account.tax.group')
-        tax_group = binder.to_openerp(record['id_tax_rules_group'], True)
-        if not tax_group:
-            return {}
-        taxes = self.session.env['account.tax'].search([
-            ('tax_group_id','=',tax_group.id)
-        ])
-        return {"taxes_id": [(6, 0, [t.id for t in taxes])]}
+    # @mapping
+    # def taxes_id(self, record):
+    #     if record['id_tax_rules_group'] == '0':
+    #         return {}
+    #     binder = self.binder_for('prestashop.account.tax.group')
+    #     tax_group = binder.to_openerp(record['id_tax_rules_group'], True)
+    #     if not tax_group:
+    #         return {}
+    #     taxes = self.session.env['account.tax'].search([
+    #         ('tax_group_id','=',tax_group.id)
+    #     ])
+    #     return {"taxes_id": [(6, 0, [t.id for t in taxes])]}
 
     @mapping
     def type(self, record):

@@ -103,18 +103,6 @@ class PrestashopBackend(models.Model):
     }
 
     @api.multi
-    def synchronize_metadata(self):
-        # session = ConnectorSession(cr, uid, context=context)
-        # for backend in self:
-        #     for model in ('prestashop.shop.group',
-        #                   'prestashop.shop'):
-        #         # import directly, do not delay because this
-        #         # is a fast operation, a direct return is fine
-        #         # and it is simpler to import them sequentially
-        #         import_batch(session, model, backend.id)
-        return True
-
-    @api.multi
     def synchronize_basedata(self):
         session = ConnectorSession.from_env(self.env)
         for backend in self:
