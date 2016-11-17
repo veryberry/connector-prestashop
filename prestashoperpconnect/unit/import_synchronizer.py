@@ -223,15 +223,15 @@ class PaymentMethodsImportSynchronizer(BatchImportSynchronizer):
         )
 
     def _import_record(self, record):
-        ids = self.session.env['account.payment.method']([
+        ids = self.session.env['account.payment.method'].search([
             ('name', '=', record['payment']),
-            ('company_id', '=', self.backend_record.company_id.id),
+            # ('company_id', '=', self.backend_record.company_id.id),
         ])
         if ids:
             return
         self.session.env['account.payment.method'].create({
             'name': record['payment'],
-            'company_id': self.backend_record.company_id.id,
+            # 'company_id': self.backend_record.company_id.id,
         })
 
 
