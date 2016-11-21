@@ -42,7 +42,7 @@ class StockMove(models.Model):
     def action_done(self):
         res = super(StockMove, self).action_done()
         location_ids = self.get_stock_location_ids()
-        for move in self.browse(cr, uid, ids, context=context):
+        for move in self:
             if move.location_dest_id.id in location_ids:
                 move.update_prestashop_quantities()
         return res
