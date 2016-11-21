@@ -186,6 +186,7 @@ class PrestashopBackend(models.Model):
 
     @api.multi
     def import_sale_orders(self):
+        print 'p['*10
         session = ConnectorSession.from_env(self.env)
         for backend_record in self:
             since_date = backend_record.import_orders_since
@@ -246,7 +247,7 @@ class PrestashopBackend(models.Model):
             domain = []
         records = self.search(domain)
         if records:
-            getattr(records, callback)
+            getattr(records, callback)()
 
     @api.model
     def _scheduler_update_product_stock_qty(self, domain=None):
