@@ -1,56 +1,48 @@
 # -*- coding: utf-8 -*-
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from openerp.osv.orm import Model
+from openerp import api, models
 
 
-class StockMove(Model):
+class StockMove(models.Model):
     _inherit = 'stock.move'
 
-    def update_prestashop_quantities(self, cr, uid, ids, context=None):
-        for move in self.browse(cr, uid, ids, context=context):
+    @api.multi
+    def update_prestashop_quantities(self):
+        for move in self:
             move.product_id.update_prestashop_quantities()
 
-    def get_stock_location_ids(self, cr, uid, context=None):
-        warehouse_obj = self.pool['stock.warehouse']
-        warehouse_ids = warehouse_obj.search(cr, uid, [], context=context)
-        warehouses = warehouse_obj.browse(
-            cr, uid, warehouse_ids, context=context
-        )
+    @api.model
+    def get_stock_location_ids(self):
+        warehouse_obj = self.env['stock.warehouse']
+        warehouses = warehouse_obj.search([])
         location_ids = []
         for warehouse in warehouses:
             location_ids.append(warehouse.lot_stock_id.id)
         return location_ids
 
-    def create(self, cr, uid, vals, context=None):
-        stock_id = super(StockMove, self).create(
-            cr, uid, vals, context=context
-        )
-        location_ids = self.get_stock_location_ids(cr, uid, context=context)
+    @api.model
+    def create(self, vals):
+        stock = super(StockMove, self).create(vals)
+        location_ids = self.get_stock_location_ids()
         if vals['location_id'] in location_ids:
-            self.update_prestashop_quantities(
-                cr, uid, [stock_id], context=context
-            )
-        return stock_id
+            stock.update_prestashop_quantities()
+        return stock
 
-    def action_cancel(self, cr, uid, ids, context=None):
-        res = super(StockMove, self).action_cancel(
-            cr, uid, ids, context=context
-        )
-        location_ids = self.get_stock_location_ids(cr, uid, context=context)
-        for move in self.browse(cr, uid, ids, context=context):
+    @api.multi
+    def action_cancel(self):
+        res = super(StockMove, self).action_cancel()
+        location_ids = self.get_stock_location_ids()
+        for move in self:
             if move.location_id.id in location_ids:
-                self.update_prestashop_quantities(
-                    cr, uid, [move.id], context=context
-                )
+                move.update_prestashop_quantities()
         return res
 
-    def action_done(self, cr, uid, ids, context=None):
-        res = super(StockMove, self).action_done(cr, uid, ids, context=context)
-        location_ids = self.get_stock_location_ids(cr, uid, context=context)
+    @api.multi
+    def action_done(self):
+        res = super(StockMove, self).action_done()
+        location_ids = self.get_stock_location_ids()
         for move in self.browse(cr, uid, ids, context=context):
             if move.location_dest_id.id in location_ids:
-                self.update_prestashop_quantities(
-                    cr, uid, [move.id], context=context
-                )
+                move.update_prestashop_quantities()
         return res

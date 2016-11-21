@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from openerp import models, fields
+from openerp import api, models, fields
 
 from ...backend import prestashop
 from ...unit.backend_adapter import GenericAdapter
@@ -31,10 +31,10 @@ class AccountInvoice(models.Model):
                     continue
                 amount = invoice_line.price_subtotal
                 partner_id = invoice.partner_id.commercial_partner_id.id
-                refund_id = self._find_refund(-1 * amount, partner_id)
-                if refund_id:
+                refund = self._find_refund(-1 * amount, partner_id)
+                if refund:
                     invoice_line.unlink()
-                    line_replacement[invoice.id] = refund_id
+                    line_replacement[invoice.id] = refund.id
                     invoice.button_reset_taxes()
 
         result = super(AccountInvoice, self).action_move_create()
@@ -43,36 +43,36 @@ class AccountInvoice(models.Model):
             self._reconcile_invoice_refund(invoice_id, refund_id)
         return result
 
-    def _reconcile_invoice_refund(self, cr, uid, invoice_id, refund_id,
-                                  context=None):
-        move_line_obj = self.pool.get('account.move.line')
-        invoice_obj = self.pool.get('account.invoice')
+    @api.model
+    def _reconcile_invoice_refund(self, invoice_id, refund_id):
+        move_line_obj = self.env.get('account.move.line')
+        invoice_obj = self.env.get('account.invoice')
 
-        invoice = invoice_obj.browse(cr, uid, invoice_id, context=context)
-        refund = invoice_obj.browse(cr, uid, refund_id, context=context)
+        invoice = invoice_obj.browse(invoice_id)
+        refund = invoice_obj.browse(refund_id)
 
-        move_line_ids = move_line_obj.search(cr, uid, [
+        move_lines = move_line_obj.search([
             ('move_id', '=', invoice.move_id.id),
             ('debit', '!=', 0.0),
-        ], context=context)
-        move_line_ids += move_line_obj.search(cr, uid, [
+        ])
+        move_lines += move_line_obj.search([
             ('move_id', '=', refund.move_id.id),
             ('credit', '!=', 0.0),
-        ], context=context)
-        move_line_obj.reconcile_partial(
-            cr, uid, move_line_ids, context=context
-        )
+        ])
 
-    def _find_refund(self, cr, uid, amount, partner_id, context=None):
-        ids = self.search(cr, uid, [
+        move_lines.reconcile_partial()
+
+    @api.model
+    def _find_refund(self, amount, partner_id):
+        refunds = self.search(cr, uid, [
             ('amount_untaxed', '=', amount),
             ('type', '=', 'out_refund'),
             ('state', '=', 'open'),
             ('partner_id', '=', partner_id),
         ])
-        if not ids:
+        if not refunds:
             return None
-        return ids[0]
+        return refunds[0]
 
 
 class PrestashopRefund(models.Model):
