@@ -46,22 +46,22 @@ class PrestashopSaleOrder(models.Model):
     prestashop_delivery_number = fields.Char('PrestaShop Delivery Number')
     total_amount = fields.Float(
         string='Total amount in PrestaShop',
-        digits_compute=dp.get_precision('Account'),
+        digits=dp.get_precision('Account'),
         readonly=True,
     )
     total_amount_tax = fields.Float(
         string='Total tax in PrestaShop',
-        digits_compute=dp.get_precision('Account'),
+        digits=dp.get_precision('Account'),
         readonly=True,
     )
     total_shipping_tax_included = fields.Float(
         string='Total shipping in PrestaShop',
-        digits_compute=dp.get_precision('Account'),
+        digits=dp.get_precision('Account'),
         readonly=True,
     )
     total_shipping_tax_excluded = fields.Float(
         string='Total shipping in PrestaShop',
-        digits_compute=dp.get_precision('Account'),
+        digits=dp.get_precision('Account'),
         readonly=True,
     )
 
