@@ -51,13 +51,9 @@ class CarrierImportMapper(ImportMapper):
 
     @mapping
     def partner_id(self, record):
-        partner_pool = self.session.pool['res.partner']
-        default_partner = partner_pool.search(
-            self.session.cr,
-            self.session.uid,
-            [],
-        )[0]
-        return {'partner_id': default_partner}
+        partner_pool = self.session.env['res.partner']
+        default_partner = partner_pool.search([])[0]
+        return {'partner_id': default_partner.id}
 
     @mapping
     def prestashop_id(self, record):

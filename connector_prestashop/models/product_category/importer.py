@@ -17,7 +17,6 @@ class ProductCategoryMapper(ImportMapper):
     _model_name = 'prestashop.product.category'
 
     direct = [
-        ('position', 'sequence'),
         ('description', 'description'),
         ('link_rewrite', 'link_rewrite'),
         ('meta_description', 'meta_description'),
