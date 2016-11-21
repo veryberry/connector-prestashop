@@ -240,53 +240,46 @@ class PrestashopBackend(models.Model):
             key = keys_conversion[self.version][key]
         return key
 
-    # TODO: new API
-    def _scheduler_launch(self, cr, uid, callback, domain=None,
-                          context=None):
+    @api.model
+    def _scheduler_launch(self, callback, domain=None):
         if domain is None:
             domain = []
-        ids = self.search(cr, uid, domain, context=context)
-        if ids:
-            callback(cr, uid, ids, context=context)
+        records = self.search(domain)
+        if records:
+            getattr(records, callback)
 
-    def _scheduler_update_product_stock_qty(self, cr, uid, domain=None,
-                                            context=None):
-        self._scheduler_launch(cr, uid, self.update_product_stock_qty,
-                               domain=domain, context=context)
+    @api.model
+    def _scheduler_update_product_stock_qty(self, domain=None):
+        self._scheduler_launch('update_product_stock_qty', domain=domain)
 
-    def _scheduler_import_sale_orders(self, cr, uid, domain=None,
-                                      context=None):
-        self._scheduler_launch(cr, uid, self.import_sale_orders, domain=domain,
-                               context=context)
+    @api.model
+    def _scheduler_import_sale_orders(self, domain=None):
+        self._scheduler_launch('import_sale_orders', domain=domain)
 
-    def _scheduler_import_customers(self, cr, uid, domain=None,
-                                    context=None):
-        self._scheduler_launch(cr, uid, self.import_customers_since,
-                               domain=domain, context=context)
+    @api.model
+    def _scheduler_import_customers(self, domain=None):
+        self._scheduler_launch('import_customers_since', domain=domain)
 
-    def _scheduler_import_products(self, cr, uid, domain=None, context=None):
-        self._scheduler_launch(cr, uid, self.import_products, domain=domain,
-                               context=context)
+    @api.model
+    def _scheduler_import_products(self, domain=None):
+        self._scheduler_launch('import_products', domain=domain)
 
-    def _scheduler_import_carriers(self, cr, uid, domain=None, context=None):
-        self._scheduler_launch(cr, uid, self.import_carriers, domain=domain,
-                               context=context)
+    @api.model
+    def _scheduler_import_carriers(self, domain=None):
+        self._scheduler_launch('import_carriers', domain=domain)
 
-    def _scheduler_import_payment_modes(self, cr, uid, domain=None,
-                                        context=None):
-        self._scheduler_launch(cr, uid, self.import_payment_modes,
-                               domain=domain, context=context)
+    @api.model
+    def _scheduler_import_payment_modes(self, domain=None):
+        self._scheduler_launch('import_payment_modes', domain=domain)
+        self._scheduler_launch('import_refunds', domain=domain)
 
-        self._scheduler_launch(cr, uid, self.import_refunds,
-                               domain=domain, context=context)
+    @api.model
+    def _scheduler_import_suppliers(self, domain=None):
+        self._scheduler_launch('import_suppliers', domain=domain)
 
-    def _scheduler_import_suppliers(self, cr, uid, domain=None, context=None):
-        self._scheduler_launch(cr, uid, self.import_suppliers,
-                               domain=domain, context=context)
-
-    def import_record(self, cr, uid, backend_id, model_name, ext_id,
-                      context=None):
-        session = ConnectorSession(cr, uid, context=context)
+    @api.model
+    def import_record(self, backend_id, model_name, ext_id):
+        session = ConnectorSession.from_env(self.env)
         import_record(session, model_name, backend_id, ext_id)
         return True
 
